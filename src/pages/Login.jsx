@@ -55,18 +55,18 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-3.5" autoComplete="off">
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">
-                Correo corporativo
+                Usuario o correo corporativo
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
                 <input
-                  type="email"
+                  type="text"
                   required
                   autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 transition-colors"
-                  placeholder="usuario@acme.com"
+                  placeholder="usuario o usuario@acme.com"
                 />
               </div>
             </div>

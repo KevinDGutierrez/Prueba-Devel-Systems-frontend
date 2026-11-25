@@ -1,15 +1,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+function getCsrfToken() {
+  const match = document.cookie.match(/(?:^|;\s*)acme_csrf=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 class ApiService {
-  static getHeaders(requiresAuth = false) {
+  static getHeaders(requiresAuth = false, method = 'GET') {
     const headers = {
       'Content-Type': 'application/json'
     };
 
-    if (requiresAuth) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    if (requiresAuth && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+      const csrf = getCsrfToken();
+      if (csrf) {
+        headers['X-CSRF-Token'] = csrf;
       }
     }
 
@@ -18,10 +23,12 @@ class ApiService {
 
   static async request(endpoint, options = {}, requiresAuth = false) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const headers = this.getHeaders(requiresAuth);
+    const method = options.method || 'GET';
+    const headers = this.getHeaders(requiresAuth, method);
 
     const config = {
       ...options,
+      credentials: 'include',
       headers: {
         ...headers,
         ...options.headers
@@ -41,11 +48,15 @@ class ApiService {
     return data;
   }
 
-  static async login(email, password) {
+  static async login(usuario, password) {
     return this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ usuario, password })
     });
+  }
+
+  static async logout() {
+    return this.request('/auth/logout', { method: 'POST' }, false);
   }
 
   static async getMe() {

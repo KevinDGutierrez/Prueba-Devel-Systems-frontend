@@ -19,6 +19,7 @@ export default function UserManagement() {
   const [error, setError] = useState(null);
 
   const [nombre, setNombre] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rol, setRol] = useState('Usuarios');
@@ -67,11 +68,13 @@ export default function UserManagement() {
     try {
       await ApiService.createUsuario({
         nombre_completo: nombre.trim(),
+        username: username.trim(),
         email: email.trim(),
         password,
         rol
       });
       setNombre('');
+      setUsername('');
       setEmail('');
       setPassword('');
       setRol('Usuarios');
@@ -146,13 +149,22 @@ export default function UserManagement() {
         </h3>
 
         <form onSubmit={handleCreate} className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             <input
               type="text"
               required
               placeholder="Nombre completo"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
+              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+            />
+
+            <input
+              type="text"
+              required
+              placeholder="Nombre de usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
               className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-800"
             />
 
@@ -233,6 +245,7 @@ export default function UserManagement() {
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium text-[11px]">
                 <tr>
                   <th className="py-2.5 px-4">Usuario</th>
+                  <th className="py-2.5 px-4">Nombre</th>
                   <th className="py-2.5 px-4">Correo</th>
                   <th className="py-2.5 px-4">Rol asignado</th>
                   <th className="py-2.5 px-4">Estado</th>
@@ -248,8 +261,13 @@ export default function UserManagement() {
                   return (
                     <tr key={u.id_usuario} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3 px-4 font-medium text-slate-900">
-                        {u.nombre_completo}
-                        {isCurrent && <span className="ml-1.5 text-[10px] text-slate-400">(Tú)</span>}
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900">
+                            {u.username || u.email.split('@')[0]}
+                            {isCurrent && <span className="ml-1.5 text-[10px] text-slate-400">(Tú)</span>}
+                          </span>
+                          <span className="text-[10px] text-slate-400">{u.nombre_completo}</span>
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-slate-600">
                         {u.email}

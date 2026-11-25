@@ -5,14 +5,14 @@ const AuthContext = createContext(null);
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const timeoutRef = useRef(null);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    setToken(null);
+  const logout = useCallback(async () => {
+    try {
+      await ApiService.logout();
+    } catch {}
     setUser(null);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -21,15 +21,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const resetInactivityTimer = useCallback(() => {
-    if (!token) return;
+    if (!user) return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       logout();
     }, INACTIVITY_TIMEOUT_MS);
-  }, [token, logout]);
+  }, [user, logout]);
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       return;
     }
@@ -44,32 +44,25 @@ export function AuthProvider({ children }) {
       events.forEach(ev => window.removeEventListener(ev, handleActivity));
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [token, resetInactivityTimer]);
+  }, [user, resetInactivityTimer]);
 
   useEffect(() => {
     async function fetchMe() {
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
       try {
         const res = await ApiService.getMe();
         setUser(res.usuario);
       } catch {
-        logout();
+        setUser(null);
       } finally {
         setLoading(false);
       }
     }
     fetchMe();
-  }, [token, logout]);
+  }, []);
 
-  const login = async (email, password) => {
-    const res = await ApiService.login(email, password);
-    if (res.token) {
-      localStorage.setItem('token', res.token);
-      setToken(res.token);
+  const login = async (usuario, password) => {
+    const res = await ApiService.login(usuario, password);
+    if (res.success) {
       const userRes = await ApiService.getMe();
       setUser(userRes.usuario);
     }
@@ -78,7 +71,6 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      token,
       user,
       isAuthenticated: Boolean(user),
       isSuperAdmin: user?.rol === 'Super Admin',
